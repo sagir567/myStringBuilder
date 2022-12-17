@@ -3,10 +3,13 @@ import java.util.Stack;
 
 
 /**
+ * @author sagi yosef azulay
  * StringBuilder with undo support
  * java.lang.StringBuilder - class with modifier <b>final</b>,
  * so no inheritance, use delegation.
  */
+
+
 interface Action {
     void undo();
 }
