@@ -1,69 +1,79 @@
 import java.io.Serializable;
-import java.util.Stack ;
+import java.util.Stack;
 
-public class myStringBuilder  {
 
-    private Stack<String> s1 = new Stack<String>();
-    private StringBuilder str;
+/**
+ * StringBuilder with undo support
+ * java.lang.StringBuilder - class with modifier <b>final</b>,
+ * so no inheritance, use delegation.
+ */
+interface Action {
+    void undo();
+}
 
-    public myStringBuilder(){
+public class myStringBuilder {
+
+    private final Stack<Action> actions = new Stack<>();
+    private final StringBuilder str;
+
+
+    public myStringBuilder() {
         this.str = new StringBuilder();
 
     }
-    public myStringBuilder(String s){
 
+    public myStringBuilder(String s) {
         this.str = new StringBuilder(s);
     }
 
-    public StringBuilder append(String s){
-        s1.add(this.str.toString());
-        this.str.append(s);
-        return this.str;
+    public myStringBuilder append(String s) {
+        str.append(s);
+
+        Action action = () -> str.delete(str.length() - s.length(), str.length());
+        actions.add(action);
+        return this;
     }
 
 
-
-
-    public String toString(){
+    public String toString() {
         return this.str.toString();
     }
 
-    public StringBuilder delete(int start, int end){
-        s1.add(this.str.toString());
-        this.str= str.delete(start,end);
-        return this.str;
+    public myStringBuilder delete(int start, int end) {
+        String deleted = str.substring(start, end);
+        str.delete(start, end);
+        Action action = () -> str.insert(start, deleted);
+        return this;
     }
 
-    public StringBuilder insert(int offset, String str){
-        s1.add(this.str.toString());
-        this.str.insert(offset,str);
-        return this.str;
+    public myStringBuilder insert(int offset, String s) {
+        this.str.insert(offset, s);
+        Action action = () -> str.delete(offset, offset + s.length());
+        actions.add(action);
+        return this;
     }
 
-    public  StringBuilder replace(int start, int end,String str){
-        s1.add(this.str.toString());
-        this.str.replace(start,end,str);
-        return this.str;
+    public myStringBuilder replace(int start, int end, String s) {
+        String deleted = this.str.substring(start, end);
+        this.str.replace(start, end, s);
+        Action action = () -> this.str.replace(start, start + s.length(), deleted);
+        actions.add(action);
+        return this;
     }
 
-    public void reverse(){
-        this.str.reverse();
-
-    }
-    public StringBuilder undo(){
-        this.str = new StringBuilder(s1.pop());
-        return this.str;
+    public myStringBuilder reverse() {
+        str.reverse();
+        Action action = () -> str.reverse();
+        actions.add(action);
+        return this;
     }
 
+    public void undo() {
+        if (!actions.isEmpty())
+            actions.pop().undo();
 
 
-
-
-
-
-
-
-
+    }
 
 
 }
